@@ -1,25 +1,51 @@
-import {useState} from "react"
-import { Text, View, Image, StyleSheet, ScrollView, Button } from "react-native";
+// import { useContext } from "react";
+import {
+  Text,
+  View,
+  Image,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 import { MEALS } from "../data/dummy-data";
 import { useLayoutEffect } from "react";
 import MealDetail from "../components/MealDetails";
 import Subtitle from "../components/MealDetail/Subtitle";
 import List from "../components/MealDetail/List";
 import IconButton from "../components/MealDetail/IconButton";
+import { useSelector, useDispatch } from "react-redux";
+import { addFavorite, removeFavorite } from "../store/redux/favorites";
+// import { FavoritesContext } from "../store/context/favorites-context";
 export default function MealDetailsScreen({ navigation, route }) {
-  const [liked, setLiked] = useState(false);
-  const mealData = MEALS.find((meal) => meal.id === route.params.mealId);
-  function headerButtonPressHandler(){
-    setLiked((prevState) => !prevState);
-    console.log("header btn pressed")
+  const mealId = route.params.mealId;
+  // const favoriteMealContext = useContext(FavoritesContext);
+  const favoriteMealIds = useSelector((state) => state.favoriteMeals.ids)
+  const dispatch = useDispatch();
+  // const isMealFavorite = favoriteMealContext.ids.includes(mealId);
+  const isMealFavorite = favoriteMealIds.includes(mealId);
+  const mealData = MEALS.find((meal) => meal.id === mealId);
+  function changeFavoriteStatusHandler() {
+    if (isMealFavorite) {
+      // favoriteMealContext.remove(mealId);
+      dispatch(removeFavorite({id: mealId}))
+    } else {
+      // favoriteMealContext.addFavorite(mealId);
+      dispatch(addFavorite({id: mealId}))
+    }
   }
   useLayoutEffect(() => {
     navigation.setOptions({
       // title: `${mealData.title} Details`,
-      headerRight: () => {return <IconButton name={'star'} color="white" onPressHandler={headerButtonPressHandler}/>},}
-    
-  );
-  }, [navigation, mealData, headerButtonPressHandler]);
+      headerRight: () => {
+        return (
+          <IconButton
+            name={isMealFavorite ? "star" : "star-outline"}
+            color="white"
+            onPressHandler={changeFavoriteStatusHandler}
+          />
+        );
+      },
+    });
+  }, [navigation, mealData, changeFavoriteStatusHandler]);
   return (
     <ScrollView style={styles.rootContainer}>
       <Image source={{ uri: mealData.imageUrl }} style={styles.image} />
